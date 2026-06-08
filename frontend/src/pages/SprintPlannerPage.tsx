@@ -29,6 +29,7 @@ interface Assignment {
   developer: AssignedUser | null;
   analystHours: number | null;
   developerHours: number | null;
+  aiReason?: string | null;
 }
 interface CapacityUser {
   key: string;
@@ -49,9 +50,11 @@ interface PlanSummary {
   userCount: number;
   hoursPerPerson: number;
   itemCount: number;
+  geminiUsed?: boolean;
 }
 interface SprintPlan {
   summary: PlanSummary;
+  aiReasoning?: string | null;
   holidays: Holiday[];
   capacity: CapacityUser[];
   assignments: Assignment[];
@@ -102,7 +105,7 @@ const SummaryCard: React.FC<{ icon: React.ReactNode; label: string; value: strin
 
 // ── Sonuç ekranı ──────────────────────────────────────────────────────────────
 const PlanResult: React.FC<{ plan: SprintPlan; sprintName: string }> = ({ plan, sprintName }) => {
-  const { summary, holidays, capacity, assignments } = plan;
+  const { summary, holidays, capacity, assignments, aiReasoning } = plan;
   const [showHolidays, setShowHolidays] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +126,18 @@ const PlanResult: React.FC<{ plan: SprintPlan; sprintName: string }> = ({ plan, 
         <div className="relative">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-blue-200 text-xs uppercase tracking-wide font-medium mb-1">Sprint Planı</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Sprint Planı</p>
+                {summary.geminiUsed ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/20 text-white text-xs font-semibold rounded-full border border-white/30">
+                    <Sparkles className="w-3 h-3" /> Gemini AI
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/10 text-blue-200 text-xs rounded-full border border-white/20">
+                    Heuristik
+                  </span>
+                )}
+              </div>
               <h2 className="text-2xl font-bold">{sprintName || 'Yeni Sprint'}</h2>
               <p className="text-blue-200 text-sm mt-1">{fmt(summary.startDate)} — {fmt(summary.endDate)}</p>
             </div>
@@ -134,6 +148,12 @@ const PlanResult: React.FC<{ plan: SprintPlan; sprintName: string }> = ({ plan, 
               <Download className="w-3.5 h-3.5" /> Yazdır / PDF
             </button>
           </div>
+          {aiReasoning && (
+            <div className="mt-3 pt-3 border-t border-white/20 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-yellow-300 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-100 text-sm italic leading-relaxed">{aiReasoning}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -238,7 +258,15 @@ const PlanResult: React.FC<{ plan: SprintPlan; sprintName: string }> = ({ plan, 
           {assignments.map((a) => (
             <div key={a.index} className="grid grid-cols-[40px_1fr_200px_80px_200px_80px] gap-2 px-5 py-3 items-center hover:bg-gray-50 transition-colors">
               <span className="text-xs text-gray-400 font-mono">{a.index}</span>
-              <p className="text-sm text-gray-800 font-medium leading-snug pr-2">{a.title}</p>
+              <div className="pr-2">
+                <p className="text-sm text-gray-800 font-medium leading-snug">{a.title}</p>
+                {a.aiReason && (
+                  <p className="text-xs text-indigo-500 mt-0.5 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 flex-shrink-0" />
+                    {a.aiReason}
+                  </p>
+                )}
+              </div>
               {/* Analist */}
               <div>
                 {a.analyst ? (

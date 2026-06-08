@@ -153,10 +153,25 @@ PORT=5000
 
 ## 📋 MCP (Model Context Protocol) Sunucuları
 
-| MCP Sunucusu | Amaç |
-|-------------|------|
-| `user-eamodio.gitlens-extension-GitKraken` | Git geçmiş & branch görselleştirme |
-| `user-boa-screen-explorer` | Ekran içerik analizi |
+Cursor AI Agent, geliştirme sürecinde aşağıdaki MCP sunucularını kullanmıştır:
+
+| MCP Sunucusu | Araçlar | Kullanım |
+|-------------|---------|----------|
+| **GitLens / GitKraken** (`user-eamodio.gitlens-extension-GitKraken`) | `git_status`, `git_add_or_commit`, `git_push`, `git_pull`, `git_branch`, `git_log_or_diff`, `git_blame`, `pull_request_create`, `issues_create` + 10 daha | Git operasyonları, PR yönetimi, commit geçmişi |
+| **Boa Screen Explorer** (`user-boa-screen-explorer`) | `find_screen`, `get_screen_dll`, `list_tools` | Ekran/UI bileşeni arama ve referans alma |
+
+> Tüm MCP araç detayları için → [`docs/mcp-servers.md`](docs/mcp-servers.md)
+
+### Gemini AI (Sprint Planlama Motoru)
+
+Gemini, MCP üzerinden değil doğrudan `@google/generative-ai` SDK ile entegre edilmiştir:
+
+```env
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
+
+`POST /api/jira/sprint-plan` endpoint'inde görev atama kararlarını Gemini verir. API erişilemezse heuristik algoritma otomatik devreye girer.
 
 ---
 
@@ -191,6 +206,7 @@ Canlı ortam için önerilen seçenekler:
 | [`docs/architecture.md`](docs/architecture.md) | Detaylı mimari ve veri akışı |
 | [`docs/development-phases.md`](docs/development-phases.md) | Geliştirme fazları ve özellik zaman çizelgesi |
 | [`docs/api-reference.md`](docs/api-reference.md) | Tüm backend endpoint referansı |
+| [`docs/mcp-servers.md`](docs/mcp-servers.md) | MCP sunucuları ve araç listesi |
 | [`.cursorrules`](.cursorrules) | Cursor AI yönlendirme kuralları |
 | [`CLAUDE.md`](CLAUDE.md) | Claude Agent talimatları |
 

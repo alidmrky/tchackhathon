@@ -118,6 +118,21 @@ Yeni özellik eklerken sıra:
 
 ---
 
+## MCP Sunucuları
+
+Cursor'da aktif olan MCP sunucuları ve kullanım amaçları:
+
+| Sunucu | Kullanım |
+|--------|----------|
+| `user-eamodio.gitlens-extension-GitKraken` | `git_status`, `git_add_or_commit`, `git_push`, `git_log_or_diff`, `pull_request_create`, `issues_create` — Git ve PR iş akışları |
+| `user-boa-screen-explorer` | `find_screen`, `get_screen_dll` — Ekran/UI bileşeni keşfi |
+
+Gemini AI ise MCP değil, backend'de `@google/generative-ai` SDK ile doğrudan entegre edilmiştir (`GEMINI_API_KEY` env değişkeni).
+
+Detaylı araç listesi: [`docs/mcp-servers.md`](docs/mcp-servers.md)
+
+---
+
 ## Sık Yapılan Hatalar ve Çözümleri
 
 | Hata | Çözüm |

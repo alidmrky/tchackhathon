@@ -2,9 +2,18 @@ const express = require('express');
 const router = express.Router();
 const jiraService = require('../services/jiraService');
 const db = require('../db');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
+
+// ── Gemini istemcisi ──────────────────────────────────────────────────────────
+const getGeminiModel = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite' });
+};
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -509,44 +518,131 @@ router.post('/sprint-plan', asyncHandler(async (req, res) => {
 
   const profiles = boardUsers.map(buildProfile);
 
-  // Rol bazında grupla (hem "sadece Analist" hem de rol atanmamış herkes)
-  const analysts  = profiles.filter(p => p.analystScore > 0 || p.role === 'Analist');
-  const devs      = profiles.filter(p => p.devScore > 0 || p.role === 'Developer');
-  // Fallback: eğer hiç kategorize yoksa herkesi kullan
-  const analystPool = analysts.length > 0 ? analysts : profiles;
-  const devPool     = devs.length > 0     ? devs      : profiles;
-
-  // Puana göre sırala (düşük load + yüksek skor)
-  const pickBest = (pool, scoreKey) => {
-    return pool.slice().sort((a, b) => {
-      const scoreDiff = b[scoreKey] - a[scoreKey];
-      if (scoreDiff !== 0) return scoreDiff;
-      return a.load - b.load; // eşit skorsa az yükü olan önce
-    })[0];
-  };
-
-  // 6. Her işe analist + developer ata
   const profileMap = Object.fromEntries(profiles.map(p => [p.key, p]));
+  const perPersonHours = profiles.length > 0 ? Math.round(totalWorkingHours / profiles.length) : totalWorkingHours;
+  const itemTitles = items.map(i => typeof i === 'string' ? i : i.title || i);
 
-  // Önce tüm atamaları yap (load sayısını bulmak için)
-  const rawAssignments = items.map((item, idx) => {
-    const analyst   = pickBest(analystPool, 'analystScore');
-    const developer = pickBest(devPool, 'devScore');
-    if (analyst)                                         profileMap[analyst.key].load++;
-    if (developer && developer.key !== analyst?.key)     profileMap[developer.key].load++;
-    else if (developer && developer.key === analyst?.key) profileMap[developer.key].load++; // aynı kişiyse de say
-    return {
-      index: idx + 1,
-      title: typeof item === 'string' ? item : item.title || item,
-      analystKey:   analyst?.key   || null,
-      developerKey: developer?.key || null,
-      analyst:   analyst   ? { key: analyst.key,   displayName: analyst.displayName,   avatarUrl: analyst.avatarUrl }   : null,
-      developer: developer ? { key: developer.key, displayName: developer.displayName, avatarUrl: developer.avatarUrl } : null,
-    };
-  });
+  // 6. Atama — önce Gemini dene, başarısız olursa heuristik fallback
+  let rawAssignments = [];
+  let aiReasoning = null;
+
+  const geminiModel = getGeminiModel();
+  let geminiSuccess = false;
+
+  if (geminiModel && profiles.length > 0) {
+    try {
+      const teamContext = profiles.map(p => ({
+        key: p.key,
+        displayName: p.displayName,
+        role: p.role || 'Belirsiz',
+        skills: p.skills.map(s => `${s.skillName} (${s.skillCategory}, ${s.rating}/5 puan)`).join(', ') || 'Tanımlı yetenek yok',
+        analystScore: p.analystScore,
+        devScore: p.devScore,
+      }));
+
+      const prompt = `
+Sen bir akıllı sprint planlama asistanısın. Aşağıdaki takım bilgileri ve görev listesine göre her göreve bir analist ve bir developer ata.
+
+## Sprint Bilgileri
+- Tarih: ${startDate} → ${endDate}
+- Toplam çalışma günü: ${workingDays.length}
+- Toplam çalışma saati: ${totalWorkingHours} saat
+- Kişi başı kapasite: ${perPersonHours} saat
+
+## Takım Üyeleri
+${teamContext.map(u => `- key="${u.key}" | İsim: ${u.displayName} | Rol: ${u.role} | Analiz puanı: ${u.analystScore} | Dev puanı: ${u.devScore} | Yetenekler: ${u.skills}`).join('\n')}
+
+## Atanacak Görevler (${itemTitles.length} adet)
+${itemTitles.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+## Atama Kuralları
+1. Her göreve TAM OLARAK bir analist ve bir developer ata
+2. Analiz/BA rolündeki veya analiz yeteneklerine sahip kişileri analist olarak tercih et
+3. Frontend/Backend/DevOps yeteneklerine sahip veya Developer rolündeki kişileri developer olarak tercih et
+4. İş yükünü dengele: her kişiye mümkün olduğunca eşit sayıda iş düş
+5. Gerekirse aynı kişi hem analist hem developer olabilir (eğer takım küçükse)
+6. Her atama için görevin özelliğine göre neden o kişileri seçtiğini kısaca belirt
+
+## Yanıt Formatı (YALNIZCA geçerli JSON döndür, başka metin ekleme)
+{
+  "assignments": [
+    {
+      "index": 1,
+      "analystKey": "kullanıcı-key",
+      "developerKey": "kullanıcı-key",
+      "reason": "Bu görevi seçme nedeni kısaca"
+    }
+  ],
+  "overallReasoning": "Genel atama stratejisi hakkında 2-3 cümle"
+}
+`;
+
+      const result = await geminiModel.generateContent(prompt);
+      const text = result.response.text().trim();
+
+      // JSON bloğu var mı, varsa çıkar
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)```/) || text.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
+      const parsed = JSON.parse(jsonStr);
+
+      aiReasoning = parsed.overallReasoning || null;
+
+      rawAssignments = parsed.assignments.map((a, idx) => {
+        const analyst   = profileMap[a.analystKey]   || null;
+        const developer = profileMap[a.developerKey] || null;
+        if (analyst)   profileMap[analyst.key].load++;
+        if (developer && developer.key !== analyst?.key) profileMap[developer.key].load++;
+        else if (developer && developer.key === analyst?.key) profileMap[developer.key].load++;
+
+        return {
+          index: idx + 1,
+          title: itemTitles[idx] || `Görev ${idx + 1}`,
+          analystKey:   analyst?.key   || null,
+          developerKey: developer?.key || null,
+          analyst:   analyst   ? { key: analyst.key,   displayName: analyst.displayName,   avatarUrl: analyst.avatarUrl }   : null,
+          developer: developer ? { key: developer.key, displayName: developer.displayName, avatarUrl: developer.avatarUrl } : null,
+          aiReason: a.reason || null,
+        };
+      });
+
+      geminiSuccess = true;
+    } catch (err) {
+      console.error('Gemini sprint-plan hatası, heuristik fallback kullanılıyor:', err.message);
+    }
+  }
+
+  // Fallback: Gemini yoksa veya hata verdiyse klasik heuristik
+  if (!geminiSuccess) {
+    const analysts    = profiles.filter(p => p.analystScore > 0 || p.role === 'Analist');
+    const devs        = profiles.filter(p => p.devScore > 0 || p.role === 'Developer');
+    const analystPool = analysts.length > 0 ? analysts : profiles;
+    const devPool     = devs.length > 0     ? devs      : profiles;
+
+    const pickBest = (pool, scoreKey) =>
+      pool.slice().sort((a, b) => {
+        const d = b[scoreKey] - a[scoreKey];
+        return d !== 0 ? d : a.load - b.load;
+      })[0];
+
+    rawAssignments = itemTitles.map((title, idx) => {
+      const analyst   = pickBest(analystPool, 'analystScore');
+      const developer = pickBest(devPool, 'devScore');
+      if (analyst)                                          profileMap[analyst.key].load++;
+      if (developer && developer.key !== analyst?.key)      profileMap[developer.key].load++;
+      else if (developer && developer.key === analyst?.key) profileMap[developer.key].load++;
+      return {
+        index: idx + 1,
+        title,
+        analystKey:   analyst?.key   || null,
+        developerKey: developer?.key || null,
+        analyst:   analyst   ? { key: analyst.key,   displayName: analyst.displayName,   avatarUrl: analyst.avatarUrl }   : null,
+        developer: developer ? { key: developer.key, displayName: developer.displayName, avatarUrl: developer.avatarUrl } : null,
+        aiReason: null,
+      };
+    });
+  }
 
   // 7. Kapasite özeti
-  const perPersonHours = profiles.length > 0 ? Math.round(totalWorkingHours / profiles.length) : totalWorkingHours;
 
   // Kişi başı iş saat: kişinin toplam saati ÷ üstlendiği iş sayısı
   const hoursPerTask = (userKey) => {
@@ -586,7 +682,9 @@ router.post('/sprint-plan', asyncHandler(async (req, res) => {
       userCount: profiles.length,
       hoursPerPerson: perPersonHours,
       itemCount: items.length,
+      geminiUsed: geminiSuccess,
     },
+    aiReasoning,
     holidays: holidayList,
     capacity,
     assignments,
