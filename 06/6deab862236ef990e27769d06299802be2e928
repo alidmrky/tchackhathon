@@ -1,0 +1,31 @@
+docs/development-phases.md
+  s_91ad14d6e7793f::t_30d50f65906623 1-156
+docs/api-reference.md
+  s_91ad14d6e7793f::t_d2e64410b5d0aa 1-203
+CLAUDE.md
+  s_91ad14d6e7793f::t_8fad458f5489bb 1-129
+README.md
+  s_91ad14d6e7793f::t_12a6c0fa990a9b 1-201
+.cursorrules
+  s_91ad14d6e7793f::t_be79e71fbacbf0 1-92
+backend/.env.example
+  s_91ad14d6e7793f::t_d6b2bc130dcf81 1-10
+docs/architecture.md
+  s_91ad14d6e7793f::t_36e630f077a6cb 1-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "066deab862236ef990e27769d06299802be2e928",
+  "prompts": {},
+  "sessions": {
+    "s_91ad14d6e7793f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6288f143-dafb-486a-a7f4-8fca8d1e843b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "TURKCELL\\TCADEMIRKAYA <ali.demirkaya@turkcell.com.tr>"
+    }
+  }
+}
