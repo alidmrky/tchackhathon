@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { jiraApi } from '../api/jira';
-import { JiraProject } from '../types/jira';
+import type { JiraProject } from '../types/jira';
 import { Folder, Users, Tag, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 
 const typeColors: Record<string, string> = {

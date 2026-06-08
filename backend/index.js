@@ -7,7 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    // localhost'un tüm portlarına izin ver
+    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS: origin not allowed'));
+    }
+  },
   credentials: true,
 }));
 

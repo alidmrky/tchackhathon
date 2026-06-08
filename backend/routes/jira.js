@@ -131,9 +131,22 @@ router.post('/issues/:key/transitions', asyncHandler(async (req, res) => {
 
 // ── Boards & Sprints ───────────────────────────────────────────────────────────
 
-// GET /api/jira/boards
+// GET /api/jira/boards?all=true&projectKey=XX&startAt=0&maxResults=50
 router.get('/boards', asyncHandler(async (req, res) => {
-  const boards = await jiraService.getBoards();
+  const { all, projectKey, startAt, maxResults } = req.query;
+
+  if (all === 'true') {
+    const boards = await jiraService.getAllBoards({ projectKey });
+    return res.json(boards);
+  }
+
+  const boards = await jiraService.getBoards({
+    startAt: startAt ? parseInt(startAt) : 0,
+    maxResults: maxResults ? parseInt(maxResults) : 50,
+    projectKey,
+    name: req.query.name,
+    type: req.query.type,
+  });
   res.json(boards);
 }));
 
@@ -147,9 +160,13 @@ router.get('/boards/:boardId/issues', asyncHandler(async (req, res) => {
   res.json(issues);
 }));
 
-// GET /api/jira/boards/:boardId/sprints
+// GET /api/jira/boards/:boardId/sprints?startAt=0&maxResults=10
 router.get('/boards/:boardId/sprints', asyncHandler(async (req, res) => {
-  const sprints = await jiraService.getSprints(req.params.boardId);
+  const { startAt, maxResults } = req.query;
+  const sprints = await jiraService.getSprints(req.params.boardId, {
+    startAt: startAt ? parseInt(startAt) : 0,
+    maxResults: maxResults ? parseInt(maxResults) : 50,
+  });
   res.json(sprints);
 }));
 

@@ -28,10 +28,12 @@ export const jiraApi = {
   transitionIssue: (key: string, transitionId: string) =>
     api.post(`/jira/issues/${key}/transitions`, { transitionId }),
 
-  getBoards: () => api.get('/jira/boards'),
+  getBoards: (params?: { all?: boolean; projectKey?: string; startAt?: number; maxResults?: number; name?: string; type?: string }) =>
+    api.get('/jira/boards', { params }),
   getBoardIssues: (boardId: number, params?: { startAt?: number; maxResults?: number }) =>
     api.get(`/jira/boards/${boardId}/issues`, { params }),
-  getSprints: (boardId: number) => api.get(`/jira/boards/${boardId}/sprints`),
+  getSprints: (boardId: number, params?: { startAt?: number; maxResults?: number }) =>
+    api.get(`/jira/boards/${boardId}/sprints`, { params }),
 
   search: (jql: string, params?: { startAt?: number; maxResults?: number }) =>
     api.get('/jira/search', { params: { jql, ...params } }),

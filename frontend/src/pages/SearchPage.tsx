@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { jiraApi } from '../api/jira';
-import { JiraIssue } from '../types/jira';
+import type { JiraIssue } from '../types/jira';
 import { Search, Loader2, AlertCircle, User, Tag, CheckCircle2, Clock, Circle } from 'lucide-react';
 
 const statusCategoryIcon: Record<string, React.ReactNode> = {

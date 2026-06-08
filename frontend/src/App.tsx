@@ -7,6 +7,7 @@ import SetupPage from './pages/SetupPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import BoardsPage from './pages/BoardsPage';
+import BoardDetailPage from './pages/BoardDetailPage';
 import SearchPage from './pages/SearchPage';
 import { Loader2 } from 'lucide-react';
 
@@ -48,6 +49,7 @@ const AppLayout: React.FC = () => {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:key" element={<ProjectDetailPage />} />
           <Route path="/boards" element={<BoardsPage />} />
+          <Route path="/boards/:boardId" element={<BoardDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/setup" element={<SetupPage />} />
           <Route path="*" element={<Navigate to="/projects" replace />} />

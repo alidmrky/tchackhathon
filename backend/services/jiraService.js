@@ -7,8 +7,10 @@ const getJiraClient = () => {
     throw new Error('Jira environment variables are not configured');
   }
 
+  const baseUrl = JIRA_BASE_URL.replace(/\/$/, '');
+
   return axios.create({
-    baseURL: `${JIRA_BASE_URL}/rest/api/3`,
+    baseURL: `${baseUrl}/rest/api/2`,
     headers: {
       'Authorization': `Bearer ${JIRA_API_TOKEN}`,
       'Accept': 'application/json',
@@ -19,8 +21,9 @@ const getJiraClient = () => {
 
 const getAgileClient = () => {
   const { JIRA_BASE_URL, JIRA_API_TOKEN } = process.env;
+  const baseUrl = JIRA_BASE_URL.replace(/\/$/, '');
   return axios.create({
-    baseURL: `${JIRA_BASE_URL}/rest/agile/1.0`,
+    baseURL: `${baseUrl}/rest/agile/1.0`,
     headers: {
       'Authorization': `Bearer ${JIRA_API_TOKEN}`,
       'Accept': 'application/json',
@@ -105,10 +108,47 @@ const transitionIssue = async (issueKey, transitionId) => {
   return response.data;
 };
 
-const getBoards = async () => {
+const getBoards = async ({ startAt = 0, maxResults = 50, projectKey, name, type } = {}) => {
   const client = getAgileClient();
-  const response = await client.get('/board', { params: { maxResults: 50 } });
+  const params = { startAt, maxResults };
+  if (projectKey) params.projectKeyOrId = projectKey;
+  if (name) params.name = name;
+  if (type) params.type = type;
+  const response = await client.get('/board', { params });
   return response.data;
+};
+
+const getAllBoards = async ({ projectKey } = {}) => {
+  const client = getAgileClient();
+  const PAGE = 50;
+  let startAt = 0;
+  let allBoards = [];
+
+  console.log('[getAllBoards] Fetching all boards...');
+
+  while (true) {
+    const params = { startAt, maxResults: PAGE };
+    if (projectKey) params.projectKeyOrId = projectKey;
+
+    const res = await client.get('/board', { params });
+    const { values = [], isLast, total } = res.data;
+
+    console.log(`[getAllBoards] startAt=${startAt}, got=${values.length}, total=${total}, isLast=${isLast}`);
+
+    allBoards = allBoards.concat(values);
+
+    const shouldStop =
+      isLast === true ||
+      values.length === 0 ||
+      values.length < PAGE ||
+      allBoards.length >= total;
+
+    if (shouldStop) break;
+    startAt += PAGE;
+  }
+
+  console.log(`[getAllBoards] Done. Total fetched: ${allBoards.length}`);
+  return { values: allBoards, total: allBoards.length };
 };
 
 const getBoardIssues = async (boardId, params = {}) => {
@@ -117,10 +157,10 @@ const getBoardIssues = async (boardId, params = {}) => {
   return response.data;
 };
 
-const getSprints = async (boardId) => {
+const getSprints = async (boardId, { startAt = 0, maxResults = 50 } = {}) => {
   const client = getAgileClient();
   const response = await client.get(`/board/${boardId}/sprint`, {
-    params: { maxResults: 50 },
+    params: { startAt, maxResults },
   });
   return response.data;
 };
@@ -191,6 +231,7 @@ module.exports = {
   getIssueTransitions,
   transitionIssue,
   getBoards,
+  getAllBoards,
   getBoardIssues,
   getSprints,
   getCurrentUser,
