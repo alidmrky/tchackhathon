@@ -1,0 +1,92 @@
+# Jira Hub — Cursor AI Yönlendirme Kuralları
+
+Bu dosya, Cursor AI'ın bu proje üzerinde çalışırken uyması gereken kuralları ve proje bağlamını içerir.
+
+---
+
+## Proje Bağlamı
+
+Jira Hub, şirket içi Jira Data Center'a bağlanan bir web uygulamasıdır.
+- **Backend:** Node.js + Express 5, port 5000
+- **Frontend:** React 19 + TypeScript + Vite 8 + Tailwind CSS v4, port 5173
+- **Hedef Jira:** Data Center (REST API v2 + Agile API + Greenhopper API)
+- **Auth:** Bearer Token (PAT) — Basic Auth değil
+- **Yerel DB:** `backend/data.json` (JSON dosyası, db.js üzerinden erişilir)
+
+---
+
+## Genel Kod Kalitesi Kuralları
+
+### Dil & Stil
+- Tüm yorumlar, commit mesajları ve dokümantasyon **Türkçe** yazılır
+- Kod içinde değişken/fonksiyon isimleri **İngilizce** kalır
+- TypeScript'te `any` kullanımından kaçınılır; gerekirse `unknown` tercih edilir
+- Her yeni arayüz/tip `frontend/src/types/jira.ts` dosyasına eklenir
+
+### React & Frontend
+- Component'ler functional component olarak yazılır (class component yok)
+- State yönetimi için **TanStack Query** tercih edilir (useEffect + fetch değil)
+- Sayfa geçişleri için `react-router-dom`'un `Link` ve `useNavigate` hook'ları kullanılır
+- Vite 8 ile `import type { }` zorunlu — arayüz importlarında `import type` kullanılır
+- Tailwind sınıfları inline yazılır; ayrı CSS dosyası oluşturulmaz
+
+### Backend & API
+- Tüm Jira API çağrıları `services/jiraService.js` üzerinden yapılır
+- Route handler'lar `asyncHandler` wrapper'ı ile sarılır
+- Jira Base URL her zaman trailing slash olmadan kullanılır (`.replace(/\/$/, '')`)
+- Yeni koleksiyonlar `db.js`'e eklenir; doğrudan `data.json` yazmayın
+
+### Hata Yönetimi
+- Backend'de her route `try/catch` veya `asyncHandler` ile korunur
+- Frontend'de `useQuery`'nin `isError` ve `error` state'leri kullanılır
+- Kullanıcıya gösterilen hata mesajları Türkçe olur
+
+---
+
+## Mimari Kurallar
+
+### Yeni Sayfa Eklerken
+1. `frontend/src/pages/` altına yeni dosya oluştur
+2. `frontend/src/App.tsx`'e route ekle
+3. `frontend/src/components/Sidebar.tsx`'e navItem ekle
+4. Gerekli backend endpoint'leri `backend/routes/jira.js`'e ekle
+5. Frontend API metodu `frontend/src/api/jira.ts`'e ekle
+
+### Yeni DB Koleksiyonu Eklerken
+1. `backend/db.js`'deki `DEFAULT` objesine alan ekle
+2. CRUD fonksiyonlarını `db.js`'e ekle ve `module.exports`'a dahil et
+3. İlgili route'ları `backend/routes/jira.js`'e ekle
+4. TypeScript tiplerini `frontend/src/types/jira.ts`'e ekle
+
+### Jira API Çağrıları
+- `/rest/api/2` → Standart REST (projeler, issue'lar, kullanıcılar)
+- `/rest/agile/1.0` → Board, sprint, backlog
+- `/rest/greenhopper/1.0` → allData, rapidViews (daha zengin veri)
+- Greenhopper allData tercih edilir — tek çağrıda hem issue hem kullanıcı gelir
+
+---
+
+## Yasaklı Pratikler
+
+- `console.log` production kodunda bırakılmaz (debug için kullanılabilir, temizlenir)
+- `data.json` doğrudan import edilmez — her zaman `db.js` fonksiyonları kullanılır
+- `.env` dosyası asla commit edilmez
+- Frontend'de Jira PAT doğrudan saklanmaz (localStorage'daki token kullanıcı tarafından girilir)
+- `any` tipi TypeScript'te kullanılmaz
+
+---
+
+## Mevcut Sayfa Listesi
+
+| Route | Sayfa | Durum |
+|-------|-------|-------|
+| `/` | DashboardPage | ✅ Aktif |
+| `/setup` | SetupPage | ✅ Aktif |
+| `/boards` | BoardsPage | ✅ Aktif |
+| `/boards/:boardId` | BoardDetailPage | ✅ Aktif |
+| `/boards/:boardId/sprints/:sprintId` | SprintDetailPage | ✅ Aktif |
+| `/boards/:boardId/skills` | UserSkillsPage | ✅ Aktif |
+| `/skills` | SkillsManagementPage | ✅ Aktif |
+| `/user-skills` | UserSkillAssignmentPage | ✅ Aktif |
+| `/calendar` | LeaveCalendarPage | ✅ Aktif |
+| `/sprint-planner` | SprintPlannerPage | ✅ Aktif |
