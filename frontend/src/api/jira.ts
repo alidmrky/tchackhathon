@@ -66,6 +66,24 @@ export const jiraApi = {
     api.put(`/jira/skills/${id}`, data),
   deleteSkill: (id: string) => api.delete(`/jira/skills/${id}`),
 
+  getAllUserSkillAssignments: () => api.get('/jira/user-skills'),
+  getUserSkillAssignments: (userKey: string) => api.get(`/jira/user-skills/${userKey}`),
+  assignSkillToUser: (userKey: string, data: { skillId: string; skillName: string; skillCategory?: string; rating: number; note?: string }) =>
+    api.post(`/jira/user-skills/${userKey}`, data),
+  updateUserSkillRating: (userKey: string, skillId: string, data: { rating: number; note?: string }) =>
+    api.put(`/jira/user-skills/${userKey}/${skillId}`, data),
+  removeUserSkill: (userKey: string, skillId: string) =>
+    api.delete(`/jira/user-skills/${userKey}/${skillId}`),
+  autoAssignSkills: (boardId: number, userKey?: string) =>
+    api.post(`/jira/boards/${boardId}/auto-assign-skills`, userKey ? { userKey } : {}),
+
+  generateSprintPlan: (data: {
+    boardId: number;
+    items: string[];
+    startDate: string;
+    endDate: string;
+  }) => api.post('/jira/sprint-plan', data),
+
   getHolidays: (year?: number) => api.get('/jira/holidays', { params: year ? { year } : {} }),
   upsertHoliday: (data: { date: string; name: string; type: string; isHalfDay?: boolean }) =>
     api.post('/jira/holidays', data),

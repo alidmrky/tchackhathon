@@ -156,6 +156,84 @@ router.get('/boards/:boardId/userSkills', asyncHandler(async (req, res) => {
   res.json(skills);
 }));
 
+// POST /api/jira/boards/:boardId/auto-assign-skills
+// Issue başlıklarını tanımlı yetenek isimleriyle eşleştirir, otomatik atar
+router.post('/boards/:boardId/auto-assign-skills', asyncHandler(async (req, res) => {
+  const { boardId } = req.params;
+  const { userKey } = req.body; // isteğe bağlı: sadece bir kullanıcı için
+
+  // 1. Tanımlı yetenekler
+  const definedSkills = db.getSkills();
+  if (!definedSkills.length) {
+    return res.status(400).json({ error: 'Önce Yetenek Yönetimi\'nden yetenek tanımla.' });
+  }
+
+  // 2. Board'daki tüm issue'lar (jiraService'ten paginated)
+  const agileClient = jiraService._getAgileClient();
+  const PAGE = 100;
+  let allIssues = [];
+  let startAt = 0;
+  while (true) {
+    const r = await agileClient.get(`/board/${boardId}/issue`, {
+      params: { startAt, maxResults: PAGE, fields: 'assignee,summary,issuetype' },
+    });
+    const { issues = [], total = 0 } = r.data;
+    allIssues = allIssues.concat(issues);
+    if (allIssues.length >= total || issues.length < PAGE) break;
+    startAt += PAGE;
+  }
+
+  // Deduplicate
+  const seen = new Set();
+  const uniqueIssues = allIssues.filter((i) => { if (seen.has(i.key)) return false; seen.add(i.key); return true; });
+
+  // 3. Kullanıcı bazında issue grupla
+  const userIssueMap = {};
+  for (const issue of uniqueIssues) {
+    const assignee = issue.fields?.assignee;
+    if (!assignee) continue;
+    const key = assignee.name || assignee.accountId || assignee.displayName;
+    if (userKey && key !== userKey) continue; // filtrele
+    if (!userIssueMap[key]) {
+      userIssueMap[key] = { key, displayName: assignee.displayName, summaries: [] };
+    }
+    userIssueMap[key].summaries.push((issue.fields.summary || '').toLowerCase());
+  }
+
+  // 4. Rating hesaplama: eşleşme sayısına göre
+  const ratingFromCount = (n) => {
+    if (n >= 15) return 5;
+    if (n >= 8)  return 4;
+    if (n >= 4)  return 3;
+    if (n >= 2)  return 2;
+    return 1;
+  };
+
+  // 5. Her kullanıcı için eşleşen yetenekleri bul ve ata
+  const results = [];
+  for (const userData of Object.values(userIssueMap)) {
+    const matched = [];
+    for (const skill of definedSkills) {
+      const keyword = skill.name.toLowerCase();
+      const matchCount = userData.summaries.filter((s) => s.includes(keyword)).length;
+      if (matchCount > 0) {
+        const rating = ratingFromCount(matchCount);
+        db.assignSkill(userData.key, {
+          skillId:       skill.id,
+          skillName:     skill.name,
+          skillCategory: skill.category,
+          rating,
+          note:          `Otomatik atandı (${matchCount} issue eşleşmesi)`,
+        });
+        matched.push({ skillName: skill.name, matchCount, rating });
+      }
+    }
+    results.push({ userKey: userData.key, displayName: userData.displayName, matched });
+  }
+
+  res.json({ ok: true, processed: results.length, results });
+}));
+
 // GET /api/jira/boards/:boardId — tek board bilgisi (Agile API)
 router.get('/boards/:boardId', asyncHandler(async (req, res) => {
   const board = await jiraService.getBoard(req.params.boardId);
@@ -305,5 +383,214 @@ router.post('/holidays/bulk', (req, res) => {
   const result = db.bulkUpsertHolidays(list);
   res.json(result);
 });
+
+// ── Kullanıcı Yetenek Atamaları ───────────────────────────────────────────────
+
+// GET /api/jira/user-skills — tüm atamalar
+router.get('/user-skills', (req, res) => {
+  res.json(db.getAllUserSkills());
+});
+
+// GET /api/jira/user-skills/:userKey
+router.get('/user-skills/:userKey', (req, res) => {
+  res.json(db.getUserSkills(req.params.userKey));
+});
+
+// POST /api/jira/user-skills/:userKey  { skillId, skillName, skillCategory, rating, note }
+router.post('/user-skills/:userKey', (req, res) => {
+  const { skillId, skillName, skillCategory, rating, note } = req.body;
+  if (!skillId) return res.status(400).json({ error: 'skillId is required' });
+  const result = db.assignSkill(req.params.userKey, { skillId, skillName, skillCategory, rating, note });
+  res.status(201).json(result);
+});
+
+// PUT /api/jira/user-skills/:userKey/:skillId  { rating, note }
+router.put('/user-skills/:userKey/:skillId', (req, res) => {
+  const { rating, note } = req.body;
+  const result = db.updateSkillRating(req.params.userKey, req.params.skillId, { rating, note });
+  if (!result) return res.status(404).json({ error: 'Assignment not found' });
+  res.json(result);
+});
+
+// DELETE /api/jira/user-skills/:userKey/:skillId
+router.delete('/user-skills/:userKey/:skillId', (req, res) => {
+  db.removeUserSkill(req.params.userKey, req.params.skillId);
+  res.json({ ok: true });
+});
+
+// ── Akıllı Sprint Planlama ────────────────────────────────────────────────────
+router.post('/sprint-plan', asyncHandler(async (req, res) => {
+  const { boardId, items, startDate, endDate } = req.body;
+
+  if (!items?.length)    return res.status(400).json({ error: 'items gerekli' });
+  if (!startDate || !endDate) return res.status(400).json({ error: 'startDate ve endDate gerekli' });
+
+  // 1. Tatil listesi (o aralıktaki)
+  const holidays = db.getHolidays();
+  const holidaySet = new Set(
+    holidays
+      .filter(h => !h.isHalfDay && h.date >= startDate && h.date <= endDate)
+      .map(h => h.date)
+  );
+  const halfDayHolidays = new Set(
+    holidays
+      .filter(h => h.isHalfDay && h.date >= startDate && h.date <= endDate)
+      .map(h => h.date)
+  );
+
+  // 2. Çalışma günleri hesapla (Pzt-Cuma, tatil hariç)
+  const workingDays = [];
+  const cur = new Date(startDate + 'T00:00:00');
+  const end = new Date(endDate + 'T00:00:00');
+  while (cur <= end) {
+    const dow = cur.getDay();
+    const ds  = cur.toISOString().slice(0, 10);
+    if (dow !== 0 && dow !== 6 && !holidaySet.has(ds)) {
+      workingDays.push({ date: ds, halfDay: halfDayHolidays.has(ds) });
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  const totalWorkingHours = workingDays.reduce((s, d) => s + (d.halfDay ? 4 : 8), 0);
+
+  // 3. Kullanıcı rolleri + yetenek atamaları
+  const allRoles        = db.getAllRoles();  // { userKey: { role } }
+  const allSkillAssign  = db.getAllUserSkills(); // { userKey: [{ skillName, skillCategory, rating }] }
+
+  // 4. Board kullanıcılarını Jira'dan çek (allData → assignees)
+  let boardUsers = [];
+  try {
+    const agile  = jiraService._getAgileClient();
+    const PAGE   = 100;
+    let si       = 0;
+    const seen   = new Set();
+    while (true) {
+      const r = await agile.get(`/board/${boardId}/issue`, {
+        params: { startAt: si, maxResults: PAGE, fields: 'assignee' },
+      });
+      const { issues = [], total = 0 } = r.data;
+      for (const iss of issues) {
+        const a = iss.fields?.assignee;
+        if (!a) continue;
+        const key = a.name || a.accountId;
+        if (!seen.has(key)) {
+          seen.add(key);
+          boardUsers.push({ key, displayName: a.displayName, avatarUrl: a.avatarUrls?.['48x48'] });
+        }
+      }
+      si += PAGE;
+      if (boardUsers.length >= total || issues.length < PAGE) break;
+    }
+  } catch (e) {
+    // board erişimi yoksa devam et
+  }
+
+  // 5. Kullanıcı profilleri oluştur
+  const buildProfile = (user) => {
+    const role   = allRoles[user.key]?.role || null;
+    const skills = allSkillAssign[user.key] || [];
+    const analystScore = skills
+      .filter(s => ['Analiz', 'Analysis', 'Analist', 'BA'].some(k => s.skillCategory?.toLowerCase().includes(k.toLowerCase()) || s.skillName?.toLowerCase().includes(k.toLowerCase())))
+      .reduce((s, sk) => s + sk.rating, 0);
+    const devScore = skills
+      .filter(s => ['Frontend', 'Backend', 'Geliştirme', 'Development', 'DevOps'].some(k => s.skillCategory?.toLowerCase().includes(k.toLowerCase()) || s.skillName?.toLowerCase().includes(k.toLowerCase())))
+      .reduce((s, sk) => s + sk.rating, 0);
+    const avgSkill = skills.length ? skills.reduce((s, sk) => s + sk.rating, 0) / skills.length : 2;
+
+    return {
+      ...user,
+      role,
+      skills,
+      analystScore: analystScore + (role === 'Analist' ? 10 : 0),
+      devScore:     devScore     + (role === 'Developer' ? 10 : 0),
+      avgSkill,
+      load: 0, // atanan iş sayısı
+    };
+  };
+
+  const profiles = boardUsers.map(buildProfile);
+
+  // Rol bazında grupla (hem "sadece Analist" hem de rol atanmamış herkes)
+  const analysts  = profiles.filter(p => p.analystScore > 0 || p.role === 'Analist');
+  const devs      = profiles.filter(p => p.devScore > 0 || p.role === 'Developer');
+  // Fallback: eğer hiç kategorize yoksa herkesi kullan
+  const analystPool = analysts.length > 0 ? analysts : profiles;
+  const devPool     = devs.length > 0     ? devs      : profiles;
+
+  // Puana göre sırala (düşük load + yüksek skor)
+  const pickBest = (pool, scoreKey) => {
+    return pool.slice().sort((a, b) => {
+      const scoreDiff = b[scoreKey] - a[scoreKey];
+      if (scoreDiff !== 0) return scoreDiff;
+      return a.load - b.load; // eşit skorsa az yükü olan önce
+    })[0];
+  };
+
+  // 6. Her işe analist + developer ata
+  const profileMap = Object.fromEntries(profiles.map(p => [p.key, p]));
+
+  // Önce tüm atamaları yap (load sayısını bulmak için)
+  const rawAssignments = items.map((item, idx) => {
+    const analyst   = pickBest(analystPool, 'analystScore');
+    const developer = pickBest(devPool, 'devScore');
+    if (analyst)                                         profileMap[analyst.key].load++;
+    if (developer && developer.key !== analyst?.key)     profileMap[developer.key].load++;
+    else if (developer && developer.key === analyst?.key) profileMap[developer.key].load++; // aynı kişiyse de say
+    return {
+      index: idx + 1,
+      title: typeof item === 'string' ? item : item.title || item,
+      analystKey:   analyst?.key   || null,
+      developerKey: developer?.key || null,
+      analyst:   analyst   ? { key: analyst.key,   displayName: analyst.displayName,   avatarUrl: analyst.avatarUrl }   : null,
+      developer: developer ? { key: developer.key, displayName: developer.displayName, avatarUrl: developer.avatarUrl } : null,
+    };
+  });
+
+  // 7. Kapasite özeti
+  const perPersonHours = profiles.length > 0 ? Math.round(totalWorkingHours / profiles.length) : totalWorkingHours;
+
+  // Kişi başı iş saat: kişinin toplam saati ÷ üstlendiği iş sayısı
+  const hoursPerTask = (userKey) => {
+    const p = profileMap[userKey];
+    if (!p || p.load === 0) return 0;
+    return Math.round((perPersonHours / p.load) * 10) / 10; // 1 ondalık
+  };
+
+  const assignments = rawAssignments.map(a => ({
+    index:     a.index,
+    title:     a.title,
+    analyst:   a.analyst,
+    developer: a.developer,
+    analystHours:   a.analystKey   ? hoursPerTask(a.analystKey)   : null,
+    developerHours: a.developerKey ? hoursPerTask(a.developerKey) : null,
+  }));
+
+  const capacity = profiles.map(p => ({
+    key:           p.key,
+    displayName:   p.displayName,
+    avatarUrl:     p.avatarUrl,
+    role:          p.role,
+    assignedCount: p.load,
+    hoursPerPerson: perPersonHours,
+    hoursPerTask:  p.load > 0 ? Math.round((perPersonHours / p.load) * 10) / 10 : 0,
+  }));
+
+  const holidayList = holidays.filter(h => h.date >= startDate && h.date <= endDate);
+
+  res.json({
+    summary: {
+      startDate,
+      endDate,
+      totalWorkingDays: workingDays.length,
+      totalWorkingHours,
+      holidayCount: holidayList.length,
+      userCount: profiles.length,
+      hoursPerPerson: perPersonHours,
+      itemCount: items.length,
+    },
+    holidays: holidayList,
+    capacity,
+    assignments,
+  });
+}));
 
 module.exports = router;

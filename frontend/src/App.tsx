@@ -11,6 +11,8 @@ import SprintDetailPage from './pages/SprintDetailPage';
 import UserSkillsPage from './pages/UserSkillsPage';
 import SkillsManagementPage from './pages/SkillsManagementPage';
 import LeaveCalendarPage from './pages/LeaveCalendarPage';
+import UserSkillAssignmentPage from './pages/UserSkillAssignmentPage';
+import SprintPlannerPage from './pages/SprintPlannerPage';
 import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient({
@@ -54,6 +56,8 @@ const AppLayout: React.FC = () => {
           <Route path="/boards/:boardId/skills" element={<UserSkillsPage />} />
           <Route path="/skills" element={<SkillsManagementPage />} />
           <Route path="/calendar" element={<LeaveCalendarPage />} />
+          <Route path="/user-skills" element={<UserSkillAssignmentPage />} />
+          <Route path="/sprint-planner" element={<SprintPlannerPage />} />
           <Route path="/setup" element={<SetupPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

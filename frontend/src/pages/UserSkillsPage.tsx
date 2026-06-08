@@ -19,6 +19,7 @@ import {
   X,
   Sparkles,
   GitBranch,
+  Zap,
 } from 'lucide-react';
 
 interface UserNote {
@@ -154,6 +155,22 @@ const ROLE_COLORS: Record<string, string> = {
   'Diğer':         'bg-gray-100 text-gray-600 border-gray-200',
 };
 
+interface SkillAssignment {
+  skillId: string;
+  skillName: string;
+  skillCategory: string;
+  rating: number;
+  note?: string;
+}
+
+const RATING_LABELS: Record<number, { label: string; color: string }> = {
+  1: { label: 'Başlangıç',   color: 'text-gray-400' },
+  2: { label: 'Gelişiyor',   color: 'text-blue-500' },
+  3: { label: 'Yetkin',      color: 'text-green-500' },
+  4: { label: 'İleri Düzey', color: 'text-purple-500' },
+  5: { label: 'Uzman',       color: 'text-amber-500' },
+};
+
 interface UserSkill {
   key: string;
   displayName: string;
@@ -164,6 +181,7 @@ interface UserSkill {
   multiSprintIssues: number;
   issueTypes: Record<string, number>;
   recentTitles: string[];
+  assignedSkills: SkillAssignment[];
   aiInsight: string;
 }
 
@@ -342,22 +360,46 @@ const SkillCard: React.FC<{ user: UserSkill }> = ({ user }) => {
         )}
       </div>
 
-      {/* Son işler */}
-      {user.recentTitles.length > 0 && (
-        <div className="px-5 pb-4 pt-2 border-t border-gray-50">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
-            <Layers className="w-3 h-3" /> Örnek İşler
-          </p>
-          <ul className="space-y-1">
-            {user.recentTitles.map((title, i) => (
-              <li key={i} className="text-xs text-gray-500 truncate flex items-start gap-1.5">
-                <span className="text-gray-300 flex-shrink-0 mt-0.5">•</span>
-                {title}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Atanmış Yetenekler */}
+      <div className="px-5 pb-4 pt-2 border-t border-gray-50">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+          <Sparkles className="w-3 h-3" /> Yetenekler
+        </p>
+        {user.assignedSkills && user.assignedSkills.length > 0 ? (
+          <div className="space-y-1.5">
+            {user.assignedSkills
+              .slice()
+              .sort((a, b) => b.rating - a.rating)
+              .map((s) => {
+                const ratingInfo = RATING_LABELS[s.rating] || RATING_LABELS[3];
+                return (
+                  <div key={s.skillId} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
+                      <span className="text-xs text-gray-700 font-medium truncate">{s.skillName}</span>
+                      {s.skillCategory && (
+                        <span className="text-xs text-gray-300 hidden sm:inline truncate">{s.skillCategory}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map((n) => (
+                          <Star
+                            key={n}
+                            className={`w-3 h-3 ${n <= s.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-100 text-gray-200'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className={`text-xs font-medium ${ratingInfo.color}`}>{ratingInfo.label}</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-300 italic">Henüz yetenek atanmadı</p>
+        )}
+      </div>
 
       {/* Yorum aç/kapat butonu */}
       <div className="px-5 pb-4">
@@ -400,6 +442,7 @@ const StatMini: React.FC<{
 const UserSkillsPage: React.FC = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const [search, setSearch] = useState('');
+  const qc = useQueryClient();
 
   const { data: boardData } = useQuery({
     queryKey: ['board', boardId],
@@ -412,6 +455,15 @@ const UserSkillsPage: React.FC = () => {
     queryFn: () => jiraApi.getBoardUserSkills(Number(boardId)).then((r) => r.data),
     enabled: !!boardId,
     staleTime: 5 * 60_000,
+  });
+
+  // Tüm kullanıcıları otomatik tara → yetenek atamaları upsert edilir → skill kartlar yenilenir
+  const autoAssignMutation = useMutation({
+    mutationFn: () => jiraApi.autoAssignSkills(Number(boardId)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['board-user-skills', boardId] });
+      qc.invalidateQueries({ queryKey: ['user-skill-assignments'] });
+    },
   });
 
   const filtered = (skills || []).filter((u) =>
@@ -443,13 +495,43 @@ const UserSkillsPage: React.FC = () => {
             Board'daki tüm sprint geçmişi analiz edilerek oluşturulmuştur
           </p>
         </div>
-        <Link
-          to={`/boards/${boardId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition"
-        >
-          <ArrowLeft className="w-4 h-4" /> Board'a Dön
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => autoAssignMutation.mutate()}
+            disabled={autoAssignMutation.isPending}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-60 text-white text-sm font-medium rounded-xl transition shadow-sm"
+          >
+            {autoAssignMutation.isPending
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Taranıyor...</>
+              : <><Zap className="w-4 h-4" /> Yetenekleri Otomatik Tara</>}
+          </button>
+          <Link
+            to={`/boards/${boardId}`}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> Board'a Dön
+          </Link>
+        </div>
       </div>
+
+      {/* Otomatik tarama sonucu */}
+      {autoAssignMutation.isSuccess && autoAssignMutation.data?.data && (
+        <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
+          <p className="text-sm font-semibold text-indigo-700 mb-2 flex items-center gap-1.5">
+            <Zap className="w-4 h-4" /> Tarama Tamamlandı
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-1">
+            {autoAssignMutation.data.data.results?.map((r: { userKey: string; displayName: string; matched: Array<{ skillName: string; matchCount: number; rating: number }> }) => (
+              <div key={r.userKey} className="text-xs text-indigo-600">
+                <span className="font-medium">{r.displayName}:</span>{' '}
+                {r.matched.length > 0
+                  ? r.matched.map((m) => `${m.skillName} (${'★'.repeat(m.rating)})`).join(', ')
+                  : 'eşleşme yok'}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Arama */}
       {!isLoading && (skills?.length ?? 0) > 0 && (

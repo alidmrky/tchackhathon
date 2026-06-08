@@ -399,15 +399,17 @@ const getBoardUserSkills = async (boardId) => {
     }
   }
 
-  // Rolleri DB'den çek ve kullanıcılara ekle
+  // DB'den rol ve yetenek atamalarını çek
   const db = require('../db');
   const allRoles = db.getAllRoles();
+  const allSkillAssignments = db.getAllUserSkills();
 
   // AI insight ekle
   const result = Object.values(userMap).sort((a, b) => b.totalIssues - a.totalIssues);
   result.forEach((u) => {
     const roleEntry = allRoles[u.key];
     u.role = roleEntry?.role || null;
+    u.assignedSkills = allSkillAssignments[u.key] || [];
     u.aiInsight = generateAIInsight(u);
   });
 
@@ -489,6 +491,7 @@ const getDashboardStats = async (projectKey) => {
 };
 
 module.exports = {
+  _getAgileClient: getAgileClient,
   getBoardUserSkills,
   getProjects,
   getProject,

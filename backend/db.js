@@ -8,7 +8,8 @@ const DEFAULT = {
   userRoles: {},   // { [userKey]: { role, updatedAt } }
   userNotes: {},   // { [userKey]: [{ id, text, createdAt }] }
   skills: [],      // [{ id, name, category, description, color, createdAt }]
-  holidays: [],    // [{ id, date (YYYY-MM-DD), name, type: 'resmi'|'sirket'|'izin'|'yari', isHalfDay }]
+  holidays: [],            // [{ id, date (YYYY-MM-DD), name, type, isHalfDay }]
+  userSkillAssignments: {}, // { [userKey]: [{ id, skillId, skillName, skillCategory, rating (1-5), note, assignedAt }] }
 };
 
 // Dosyayı oku (yoksa oluştur)
@@ -160,9 +161,70 @@ const bulkUpsertHolidays = (list) => {
   return db.holidays;
 };
 
+// ── User Skill Assignments ────────────────────────────────────────────────────
+const getUserSkills = (userKey) => {
+  const db = read();
+  return (db.userSkillAssignments || {})[userKey] || [];
+};
+
+const getAllUserSkills = () => {
+  const db = read();
+  return db.userSkillAssignments || {};
+};
+
+const assignSkill = (userKey, { skillId, skillName, skillCategory, rating, note }) => {
+  const db = read();
+  if (!db.userSkillAssignments) db.userSkillAssignments = {};
+  if (!db.userSkillAssignments[userKey]) db.userSkillAssignments[userKey] = [];
+
+  const existing = db.userSkillAssignments[userKey].findIndex((s) => s.skillId === skillId);
+  if (existing !== -1) {
+    db.userSkillAssignments[userKey][existing] = {
+      ...db.userSkillAssignments[userKey][existing],
+      rating: rating ?? db.userSkillAssignments[userKey][existing].rating,
+      note: note ?? db.userSkillAssignments[userKey][existing].note,
+      updatedAt: new Date().toISOString(),
+    };
+    write(db);
+    return db.userSkillAssignments[userKey][existing];
+  }
+
+  const assignment = {
+    id: Date.now().toString() + Math.random().toString(36).slice(2, 5),
+    skillId,
+    skillName,
+    skillCategory: skillCategory || 'Genel',
+    rating: rating || 3,
+    note: note || '',
+    assignedAt: new Date().toISOString(),
+  };
+  db.userSkillAssignments[userKey].push(assignment);
+  write(db);
+  return assignment;
+};
+
+const updateSkillRating = (userKey, skillId, { rating, note }) => {
+  const db = read();
+  const list = (db.userSkillAssignments || {})[userKey] || [];
+  const idx = list.findIndex((s) => s.skillId === skillId);
+  if (idx === -1) return null;
+  list[idx] = { ...list[idx], rating, note, updatedAt: new Date().toISOString() };
+  db.userSkillAssignments[userKey] = list;
+  write(db);
+  return list[idx];
+};
+
+const removeUserSkill = (userKey, skillId) => {
+  const db = read();
+  if (!db.userSkillAssignments?.[userKey]) return;
+  db.userSkillAssignments[userKey] = db.userSkillAssignments[userKey].filter((s) => s.skillId !== skillId);
+  write(db);
+};
+
 module.exports = {
   getRole, setRole, getAllRoles,
   getNotes, addNote, deleteNote,
   getSkills, addSkill, updateSkill, deleteSkill,
   getHolidays, upsertHoliday, deleteHoliday, bulkUpsertHolidays,
+  getUserSkills, getAllUserSkills, assignSkill, updateSkillRating, removeUserSkill,
 };

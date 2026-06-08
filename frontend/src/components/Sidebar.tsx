@@ -1,13 +1,15 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useJira } from '../context/JiraContext';
-import { LayoutDashboard, Layout, Sparkles, CalendarDays, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Layout, Sparkles, CalendarDays, UserCheck, Zap, Settings, LogOut } from 'lucide-react';
 
 const navItems = [
-  { to: '/',         icon: LayoutDashboard, label: 'Dashboard',        end: true },
-  { to: '/boards',   icon: Layout,          label: "Board'lar",         end: false },
-  { to: '/skills',   icon: Sparkles,        label: 'Yetenek Yönetimi',  end: false },
-  { to: '/calendar', icon: CalendarDays,    label: 'İzin Takvimi',      end: false },
+  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',          end: true },
+  { to: '/boards',         icon: Layout,          label: "Board'lar",           end: false },
+  { to: '/sprint-planner', icon: Zap,             label: 'Sprint Planlayıcı',   end: false },
+  { to: '/skills',         icon: Sparkles,        label: 'Yetenek Yönetimi',    end: false },
+  { to: '/user-skills',    icon: UserCheck,       label: 'Yetenek Atama',       end: false },
+  { to: '/calendar',       icon: CalendarDays,    label: 'İzin Takvimi',        end: false },
 ];
 
 const Sidebar: React.FC = () => {
