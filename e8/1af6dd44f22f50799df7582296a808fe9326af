@@ -1,0 +1,54 @@
+backend/routes/jira.js
+  s_73f8701142bc72::t_d9e6de4ffcff64 163,165-169
+  s_73f8701142bc72::t_9bd1863e7b200b 148
+  s_73f8701142bc72::t_efbbf0033071bf 134,136-146,149
+  s_73f8701142bc72::t_dfe895bfe22cee 147
+frontend/src/pages/SearchPage.tsx
+  s_73f8701142bc72::t_94fd1ba7faa68a 4
+backend/services/jiraService.js
+  s_73f8701142bc72::t_7edaf077009609 111,116
+  s_73f8701142bc72::t_07e9c9d8c1c37c 115
+  s_73f8701142bc72::t_0f92b4eda5109b 234
+  s_73f8701142bc72::t_478297da13bf21 113-114,117,121-126,129-131,133-134,138,145,147-149,151
+  s_73f8701142bc72::t_b4e49002abbd25 127-128,132,135-137,139-144,146,150
+  s_73f8701142bc72::t_40861399ab0659 10-11,13
+  s_73f8701142bc72::t_882a768b6b4894 24,26
+  s_73f8701142bc72::t_c04e1bd72d68bb 160,163
+frontend/src/pages/BoardDetailPage.tsx
+  s_73f8701142bc72::t_5cb70543a044f6 1-337
+frontend/src/App.tsx
+  s_73f8701142bc72::t_fcbf3cdd2b7f83 10
+  s_73f8701142bc72::t_f393d15895e307 52
+frontend/src/pages/ProjectsPage.tsx
+  s_73f8701142bc72::t_08b6d069ccd2c3 5
+frontend/src/pages/BoardsPage.tsx
+  s_73f8701142bc72::t_fb4609185a24d4 3,5-12,16,18-19,43,55-56,63-64,67-69,181,195,198,200,247,264-280,289
+  s_73f8701142bc72::t_429f51ab4f82e6 1,13-14,33-41,44,46-50,57-60,62,71-74,89,110,127-128,130,132-134,163-164,297-298,301-303,306-312
+  s_73f8701142bc72::t_599e5424d1870d 15,20-30,45,51,54,61,76,80,82-88,90,93-109,111-126,129,131,135-156,158-159,161,165,167-180,182-194,196-197,199,201-222,224-233,236-246,248-263,281-288,290,299-300,304-305
+.cursor/skills/jira-hub-overview/SKILL.md
+  s_73f8701142bc72::t_ee051cbf1f772b 1-176
+backend/index.js
+  s_73f8701142bc72::t_9e36ab0d740310 10-17
+frontend/src/pages/ProjectDetailPage.tsx
+  s_73f8701142bc72::t_577de4eeee1b04 5
+frontend/src/api/jira.ts
+  s_73f8701142bc72::t_7ea823063a1297 32
+  s_73f8701142bc72::t_dec93f315c1e78 35-36
+  s_73f8701142bc72::t_6cc857aa4eb4b2 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e81af6dd44f22f50799df7582296a808fe9326af",
+  "prompts": {},
+  "sessions": {
+    "s_73f8701142bc72": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "797f5322-c061-42e9-8c35-ad0c2701d44f",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "TURKCELL\\TCADEMIRKAYA <ali.demirkaya@turkcell.com.tr>"
+    }
+  }
+}
