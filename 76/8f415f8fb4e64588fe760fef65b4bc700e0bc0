@@ -1,0 +1,21 @@
+backend/.env.example
+  s_73f8701142bc72::t_36fc3402f89853 1-2
+.gitignore
+  s_73f8701142bc72::t_de3bb5e851884b 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "768f415f8fb4e64588fe760fef65b4bc700e0bc0",
+  "prompts": {},
+  "sessions": {
+    "s_73f8701142bc72": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "797f5322-c061-42e9-8c35-ad0c2701d44f",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": null
+    }
+  }
+}
