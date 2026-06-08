@@ -1,0 +1,36 @@
+backend/.env.example
+  s_91ad14d6e7793f::t_a8b1d2b4f8fabc 12-16
+backend/routes/jira.js
+  s_91ad14d6e7793f::t_845a580f69dae2 685,687
+  s_91ad14d6e7793f::t_68d89603947aa6 5,10-16
+  s_91ad14d6e7793f::t_fdbc74d731bd80 522-606,608-643
+frontend/src/pages/SprintPlannerPage.tsx
+  s_91ad14d6e7793f::t_71a68a1a16101b 261-269
+  s_91ad14d6e7793f::t_a982e4c3c4dad1 129-140,151-156
+  s_91ad14d6e7793f::t_40c6a9bca0ae5c 108
+  s_91ad14d6e7793f::t_d38cf04f7a321a 32
+  s_91ad14d6e7793f::t_9ac0c3d44a799f 53,57
+docs/mcp-servers.md
+  s_91ad14d6e7793f::t_48a98cc1b822d4 1-130
+CLAUDE.md
+  s_91ad14d6e7793f::t_f2826bbeae001a 121-135
+README.md
+  s_91ad14d6e7793f::t_c464aea5aa946a 209
+  s_91ad14d6e7793f::t_74415b1958eeb3 156-174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "709639f16ac725bcab68f630218a5ce6f70dcfce",
+  "prompts": {},
+  "sessions": {
+    "s_91ad14d6e7793f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6288f143-dafb-486a-a7f4-8fca8d1e843b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "TURKCELL\\TCADEMIRKAYA <ali.demirkaya@turkcell.com.tr>"
+    }
+  }
+}
