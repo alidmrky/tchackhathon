@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useJira } from '../context/JiraContext';
-import { LayoutDashboard, Folder, Layout, Search, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Layout, Sparkles, CalendarDays, Settings, LogOut } from 'lucide-react';
 
 const navItems = [
-  { to: '/projects', icon: Folder, label: 'Projeler' },
-  { to: '/boards', icon: Layout, label: "Board'lar" },
-  { to: '/search', icon: Search, label: 'Arama' },
+  { to: '/',         icon: LayoutDashboard, label: 'Dashboard',        end: true },
+  { to: '/boards',   icon: Layout,          label: "Board'lar",         end: false },
+  { to: '/skills',   icon: Sparkles,        label: 'Yetenek Yönetimi',  end: false },
+  { to: '/calendar', icon: CalendarDays,    label: 'İzin Takvimi',      end: false },
 ];
 
 const Sidebar: React.FC = () => {
@@ -35,10 +36,11 @@ const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive

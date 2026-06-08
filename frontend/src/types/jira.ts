@@ -84,3 +84,69 @@ export interface JiraSprint {
   endDate?: string;
   goal?: string;
 }
+
+// Greenhopper allData endpoint'inden gelen düz issue formatı
+export interface AllDataIssue {
+  id: number;
+  key: string;
+  summary: string;
+  typeId: string;
+  priorityId: string;
+  statusId: string;
+  done: boolean;
+  hidden: boolean;
+  assignee?: string;
+  assigneeName?: string;
+  avatarUrl?: string;
+  hasCustomUserAvatar?: boolean;
+  estimateStatistic?: { statFieldId: string; statFieldValue: Record<string, unknown> };
+  trackingStatistic?: { statFieldId: string; statFieldValue: Record<string, unknown> };
+  timeInColumn?: { enteredStatus: number; durationPreviously: number };
+}
+
+export interface QuickFilter {
+  id: number;
+  name: string;
+  query: string;
+  description?: string;
+  iconUrl?: string;
+  shared?: boolean;
+}
+
+// entityData içindeki dictionary yapıları (key = id string)
+export interface EntityStatus {
+  statusName: string;
+  statusUrl?: string;
+  statusCategory?: { colorName: string; key: string };
+}
+
+export interface EntityIssueType {
+  name: string;
+  iconUrl?: string;
+  description?: string;
+}
+
+export interface EntityPriority {
+  name: string;
+  iconUrl?: string;
+  statusColor?: string;
+}
+
+export interface AllDataResponse {
+  issuesData?: { issues: AllDataIssue[] };
+  quickFilters?: QuickFilter[];
+  sprint?: {
+    id: number;
+    name: string;
+    state: string;
+    startDate?: string;
+    endDate?: string;
+    goal?: string;
+  };
+  // Greenhopper gerçek yapısı: dictionary (key = id string)
+  entityData?: {
+    statuses?: Record<string, EntityStatus>;
+    issueTypes?: Record<string, EntityIssueType>;
+    priorities?: Record<string, EntityPriority>;
+  };
+}

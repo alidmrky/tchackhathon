@@ -57,7 +57,7 @@ const BoardsPage: React.FC = () => {
         .getBoards({
           startAt: page * PAGE_SIZE,
           maxResults: PAGE_SIZE,
-          name: debouncedSearch || undefined,
+          query: debouncedSearch || undefined,
           type: typeFilter || undefined,
         })
         .then((r) => r.data),

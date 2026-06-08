@@ -1,0 +1,426 @@
+{
+  "userRoles": {
+    "TCAOZKESEK": {
+      "role": "Developer",
+      "updatedAt": "2026-06-08T12:24:35.995Z"
+    },
+    "TCADEMIRKAYA": {
+      "role": "Developer",
+      "updatedAt": "2026-06-08T12:24:42.072Z"
+    },
+    "TCBACIKGOZ": {
+      "role": "Analist",
+      "updatedAt": "2026-06-08T12:24:43.518Z"
+    },
+    "TCECDUMAN": {
+      "role": "Analist",
+      "updatedAt": "2026-06-08T12:24:45.156Z"
+    },
+    "TCMKARACAM": {
+      "role": "Developer",
+      "updatedAt": "2026-06-08T12:24:47.144Z"
+    },
+    "TCONDUMAN": {
+      "role": "Analist",
+      "updatedAt": "2026-06-08T12:24:54.762Z"
+    }
+  },
+  "userNotes": {},
+  "skills": [
+    {
+      "id": "1780922432600",
+      "name": "Finhub",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:40:32.600Z"
+    },
+    {
+      "id": "1780922448858",
+      "name": "OIM",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:40:48.858Z"
+    },
+    {
+      "id": "1780922455819",
+      "name": "Esnaf",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:40:55.819Z"
+    },
+    {
+      "id": "1780922459601",
+      "name": "YP Kredi",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:40:59.601Z"
+    },
+    {
+      "id": "1780922465178",
+      "name": "Kredi",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:05.178Z"
+    },
+    {
+      "id": "1780922472711",
+      "name": "Ödeme Planı",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:12.711Z"
+    },
+    {
+      "id": "1780922485295",
+      "name": "Unit Test",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:25.295Z"
+    },
+    {
+      "id": "1780922496350",
+      "name": "AI",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:36.350Z"
+    },
+    {
+      "id": "1780922502257",
+      "name": "Dönüşüm",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:42.257Z"
+    },
+    {
+      "id": "1780922507973",
+      "name": "Testroyer",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:47.973Z"
+    },
+    {
+      "id": "1780922512831",
+      "name": "HOBIM",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:41:52.831Z"
+    },
+    {
+      "id": "1780922524725",
+      "name": "Maya",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:04.725Z"
+    },
+    {
+      "id": "1780922527666",
+      "name": "KRM",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:07.666Z"
+    },
+    {
+      "id": "1780922536605",
+      "name": "CallCenter",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:16.605Z"
+    },
+    {
+      "id": "1780922539060",
+      "name": "BOA",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:19.060Z"
+    },
+    {
+      "id": "1780922546524",
+      "name": "Kurumsal Araç Kredisi",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:26.524Z"
+    },
+    {
+      "id": "1780922550070",
+      "name": "Mobil İmza",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:30.070Z"
+    },
+    {
+      "id": "1780922553604",
+      "name": "Nace",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:33.604Z"
+    },
+    {
+      "id": "1780922556393",
+      "name": "TSG",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:36.393Z"
+    },
+    {
+      "id": "1780922559229",
+      "name": "SM",
+      "category": "Genel",
+      "description": "",
+      "color": "blue",
+      "createdAt": "2026-06-08T12:42:39.229Z"
+    }
+  ],
+  "holidays": [
+    {
+      "id": "1780922971746mcau",
+      "date": "2026-01-01",
+      "name": "Yılbaşı",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.746Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "17809231702596izo",
+      "date": "2026-01-02",
+      "name": "",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:50.259Z"
+    },
+    {
+      "id": "1780922971747mv3c",
+      "date": "2026-03-19",
+      "name": "Ramazan Bayramı Arifesi",
+      "type": "yari",
+      "isHalfDay": true,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "17809229717477yus",
+      "date": "2026-03-20",
+      "name": "Ramazan Bayramı 1. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747c30x",
+      "date": "2026-03-21",
+      "name": "Ramazan Bayramı 2. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747snwa",
+      "date": "2026-03-22",
+      "name": "Ramazan Bayramı 3. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747q43y",
+      "date": "2026-04-23",
+      "name": "Ulusal Egemenlik ve Çocuk Bayramı",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747ivo7",
+      "date": "2026-05-01",
+      "name": "Emek ve Dayanışma Günü",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "178092297174716im",
+      "date": "2026-05-19",
+      "name": "Gençlik ve Spor Bayramı",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747vsn7",
+      "date": "2026-05-26",
+      "name": "Kurban Bayramı Arifesi",
+      "type": "yari",
+      "isHalfDay": true,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "17809229717471dry",
+      "date": "2026-05-27",
+      "name": "Kurban Bayramı 1. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747oo4l",
+      "date": "2026-05-28",
+      "name": "Kurban Bayramı 2. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.672Z"
+    },
+    {
+      "id": "1780922971747y0mr",
+      "date": "2026-05-29",
+      "name": "Kurban Bayramı 3. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "17809229717479xx3",
+      "date": "2026-05-30",
+      "name": "Kurban Bayramı 4. Gün",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923156673jzl2",
+      "date": "2026-07-13",
+      "name": "Şirket Tatili (Köprü)",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "178092315667377wq",
+      "date": "2026-07-14",
+      "name": "Şirket Tatili (Köprü)",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780922971747temk",
+      "date": "2026-07-15",
+      "name": "Demokrasi ve Milli Birlik Günü",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923165451lbcm",
+      "date": "2026-07-16",
+      "name": "",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:45.451Z"
+    },
+    {
+      "id": "1780923167746vrao",
+      "date": "2026-07-17",
+      "name": "",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:47.746Z"
+    },
+    {
+      "id": "1780923156673c08h",
+      "date": "2026-08-24",
+      "name": "Şirket Tatili",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923156673kwr3",
+      "date": "2026-08-25",
+      "name": "Şirket Tatili",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923156673uko1",
+      "date": "2026-08-26",
+      "name": "Şirket Tatili",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923156673hlet",
+      "date": "2026-08-27",
+      "name": "Şirket Tatili",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780923156673881o",
+      "date": "2026-08-28",
+      "name": "Şirket Tatili",
+      "type": "sirket",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780922971747hg4y",
+      "date": "2026-08-30",
+      "name": "Zafer Bayramı",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "1780922971747wnyp",
+      "date": "2026-10-28",
+      "name": "Cumhuriyet Bayramı Öncesi",
+      "type": "yari",
+      "isHalfDay": true,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    },
+    {
+      "id": "17809229717473i3z",
+      "date": "2026-10-29",
+      "name": "Cumhuriyet Bayramı",
+      "type": "resmi",
+      "isHalfDay": false,
+      "createdAt": "2026-06-08T12:49:31.747Z",
+      "updatedAt": "2026-06-08T12:52:36.673Z"
+    }
+  ]
+}

@@ -28,8 +28,14 @@ export const jiraApi = {
   transitionIssue: (key: string, transitionId: string) =>
     api.post(`/jira/issues/${key}/transitions`, { transitionId }),
 
-  getBoards: (params?: { all?: boolean; projectKey?: string; startAt?: number; maxResults?: number; name?: string; type?: string }) =>
+  getBoards: (params?: { all?: boolean; startAt?: number; maxResults?: number; query?: string; type?: string }) =>
     api.get('/jira/boards', { params }),
+  getBoard: (boardId: number) =>
+    api.get(`/jira/boards/${boardId}`),
+  getBoardUserSkills: (boardId: number) =>
+    api.get(`/jira/boards/${boardId}/userSkills`),
+  getBoardAllData: (boardId: number, params?: { selectedProjectKey?: string; activeQuickFilters?: string; etag?: string }) =>
+    api.get(`/jira/boards/${boardId}/allData`, { params }),
   getBoardIssues: (boardId: number, params?: { startAt?: number; maxResults?: number }) =>
     api.get(`/jira/boards/${boardId}/issues`, { params }),
   getSprints: (boardId: number, params?: { startAt?: number; maxResults?: number }) =>
@@ -41,6 +47,31 @@ export const jiraApi = {
   searchUsers: (query: string) => api.get('/jira/users/search', { params: { query } }),
   getAssignableUsers: (project: string) =>
     api.get('/jira/users/assignable', { params: { project } }),
+
+  getUserNotes: (userKey: string) => api.get(`/jira/users/${userKey}/notes`),
+  addUserNote: (userKey: string, text: string) =>
+    api.post(`/jira/users/${userKey}/notes`, { text }),
+  deleteUserNote: (userKey: string, noteId: string) =>
+    api.delete(`/jira/users/${userKey}/notes/${noteId}`),
+
+  getAllUserRoles: () => api.get('/jira/users/roles'),
+  getUserRole: (userKey: string) => api.get(`/jira/users/${userKey}/role`),
+  setUserRole: (userKey: string, role: string) =>
+    api.put(`/jira/users/${userKey}/role`, { role }),
+
+  getSkills: () => api.get('/jira/skills'),
+  addSkill: (data: { name: string; category?: string; description?: string; color?: string }) =>
+    api.post('/jira/skills', data),
+  updateSkill: (id: string, data: { name?: string; category?: string; description?: string; color?: string }) =>
+    api.put(`/jira/skills/${id}`, data),
+  deleteSkill: (id: string) => api.delete(`/jira/skills/${id}`),
+
+  getHolidays: (year?: number) => api.get('/jira/holidays', { params: year ? { year } : {} }),
+  upsertHoliday: (data: { date: string; name: string; type: string; isHalfDay?: boolean }) =>
+    api.post('/jira/holidays', data),
+  deleteHoliday: (date: string) => api.delete(`/jira/holidays/${date}`),
+  bulkUpsertHolidays: (list: Array<{ date: string; name: string; type: string; isHalfDay?: boolean }>) =>
+    api.post('/jira/holidays/bulk', list),
 };
 
 export default api;

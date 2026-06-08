@@ -122,7 +122,7 @@ Base URL: `http://localhost:5000/api/jira`
 ### Board'lar & Sprint'ler
 | Method | Endpoint | Açıklama |
 |--------|----------|----------|
-| GET | `/boards` | Board listesi — `?name=`, `?type=scrum\|kanban`, `?startAt=`, `?maxResults=` |
+| GET | `/boards` | Board listesi — `?name=`, `?type=scrum\|| GET | `/boards` | Board listesi � `?query=`, `?type=scrum\|kanban`, `?startAt=`, `?maxResults=` (Greenhopper API) |
 | GET | `/boards?all=true` | Tüm board'ları tek seferde çek (pagination loop) |
 | GET | `/boards/:id/sprints` | Sprint listesi `?startAt=&maxResults=` |
 | GET | `/boards/:id/issues` | Board issue'ları |

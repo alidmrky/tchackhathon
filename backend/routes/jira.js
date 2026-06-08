@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jiraService = require('../services/jiraService');
+const db = require('../db');
 
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -131,23 +132,45 @@ router.post('/issues/:key/transitions', asyncHandler(async (req, res) => {
 
 // ── Boards & Sprints ───────────────────────────────────────────────────────────
 
-// GET /api/jira/boards?all=true&projectKey=XX&startAt=0&maxResults=50
+// GET /api/jira/boards?all=true&query=XX&startAt=0&maxResults=50&type=scrum|kanban
 router.get('/boards', asyncHandler(async (req, res) => {
-  const { all, projectKey, startAt, maxResults } = req.query;
+  const { all, startAt, maxResults } = req.query;
 
   if (all === 'true') {
-    const boards = await jiraService.getAllBoards({ projectKey });
+    const boards = await jiraService.getAllBoards();
     return res.json(boards);
   }
 
   const boards = await jiraService.getBoards({
     startAt: startAt ? parseInt(startAt) : 0,
     maxResults: maxResults ? parseInt(maxResults) : 50,
-    projectKey,
-    name: req.query.name,
+    query: req.query.query || req.query.name,
     type: req.query.type,
   });
   res.json(boards);
+}));
+
+// GET /api/jira/boards/:boardId/userSkills — tüm sprintleri tarayıp kullanıcı skill'lerini döner
+router.get('/boards/:boardId/userSkills', asyncHandler(async (req, res) => {
+  const skills = await jiraService.getBoardUserSkills(req.params.boardId);
+  res.json(skills);
+}));
+
+// GET /api/jira/boards/:boardId — tek board bilgisi (Agile API)
+router.get('/boards/:boardId', asyncHandler(async (req, res) => {
+  const board = await jiraService.getBoard(req.params.boardId);
+  res.json(board);
+}));
+
+// GET /api/jira/boards/:boardId/allData?selectedProjectKey=&activeQuickFilters=49179,49183&etag=
+router.get('/boards/:boardId/allData', asyncHandler(async (req, res) => {
+  const { selectedProjectKey, activeQuickFilters, etag } = req.query;
+  const data = await jiraService.getBoardAllData(req.params.boardId, {
+    selectedProjectKey,
+    activeQuickFilters,
+    etag,
+  });
+  res.json(data);
 }));
 
 // GET /api/jira/boards/:boardId/issues
@@ -172,6 +195,48 @@ router.get('/boards/:boardId/sprints', asyncHandler(async (req, res) => {
 
 // ── Search ─────────────────────────────────────────────────────────────────────
 
+// ── Kullanıcı Notları (JSON DB) ───────────────────────────────────────────────
+
+// GET /api/jira/users/:userKey/notes
+router.get('/users/:userKey/notes', (req, res) => {
+  res.json(db.getNotes(req.params.userKey));
+});
+
+// POST /api/jira/users/:userKey/notes  { text }
+router.post('/users/:userKey/notes', (req, res) => {
+  const { text } = req.body;
+  if (!text || !text.trim()) return res.status(400).json({ error: 'text is required' });
+  const note = db.addNote(req.params.userKey, text.trim());
+  res.status(201).json(note);
+});
+
+// DELETE /api/jira/users/:userKey/notes/:noteId
+router.delete('/users/:userKey/notes/:noteId', (req, res) => {
+  db.deleteNote(req.params.userKey, req.params.noteId);
+  res.json({ ok: true });
+});
+
+// ── Kullanıcı Rolleri (JSON DB) ───────────────────────────────────────────────
+
+// GET /api/jira/users/roles — tüm roller (BoardDetailPage için toplu çekim)
+router.get('/users/roles', (req, res) => {
+  res.json(db.getAllRoles());
+});
+
+// GET /api/jira/users/:userKey/role
+router.get('/users/:userKey/role', (req, res) => {
+  const role = db.getRole(req.params.userKey);
+  res.json(role || { role: null });
+});
+
+// PUT /api/jira/users/:userKey/role  { role }
+router.put('/users/:userKey/role', (req, res) => {
+  const { role } = req.body;
+  if (!role) return res.status(400).json({ error: 'role is required' });
+  const saved = db.setRole(req.params.userKey, role);
+  res.json(saved);
+});
+
 // GET /api/jira/search?jql=...&startAt=0&maxResults=50
 router.get('/search', asyncHandler(async (req, res) => {
   const { jql, startAt, maxResults } = req.query;
@@ -182,5 +247,63 @@ router.get('/search', asyncHandler(async (req, res) => {
   });
   res.json(results);
 }));
+
+// ── Yetenek Yönetimi (Skills) ─────────────────────────────────────────────────
+
+// GET /api/jira/skills
+router.get('/skills', (req, res) => {
+  res.json(db.getSkills());
+});
+
+// POST /api/jira/skills  { name, category, description, color }
+router.post('/skills', (req, res) => {
+  const { name, category, description, color } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'name is required' });
+  const skill = db.addSkill({ name: name.trim(), category, description, color });
+  res.status(201).json(skill);
+});
+
+// PUT /api/jira/skills/:id  { name, category, description, color }
+router.put('/skills/:id', (req, res) => {
+  const updated = db.updateSkill(req.params.id, req.body);
+  if (!updated) return res.status(404).json({ error: 'Skill not found' });
+  res.json(updated);
+});
+
+// DELETE /api/jira/skills/:id
+router.delete('/skills/:id', (req, res) => {
+  db.deleteSkill(req.params.id);
+  res.json({ ok: true });
+});
+
+// ── İzin Takvimi (Holidays) ───────────────────────────────────────────────────
+
+// GET /api/jira/holidays?year=2026
+router.get('/holidays', (req, res) => {
+  const { year } = req.query;
+  res.json(db.getHolidays(year ? parseInt(year) : null));
+});
+
+// POST /api/jira/holidays  { date, name, type, isHalfDay }
+router.post('/holidays', (req, res) => {
+  const { date, name, type, isHalfDay } = req.body;
+  if (!date) return res.status(400).json({ error: 'date is required' });
+  const holiday = db.upsertHoliday({ date, name, type, isHalfDay });
+  res.status(201).json(holiday);
+});
+
+// DELETE /api/jira/holidays/:date  (YYYY-MM-DD)
+router.delete('/holidays/:date', (req, res) => {
+  db.deleteHoliday(req.params.date);
+  res.json({ ok: true });
+});
+
+// POST /api/jira/holidays/bulk  [{ date, name, type, isHalfDay }]
+router.post('/holidays/bulk', (req, res) => {
+  const list = req.body;
+  if (!Array.isArray(list)) return res.status(400).json({ error: 'array expected' });
+  const result = db.bulkUpsertHolidays(list);
+  res.json(result);
+});
 
 module.exports = router;
